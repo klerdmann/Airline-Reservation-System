@@ -216,6 +216,61 @@ public class DBConnection {
 	}
 	
 	
+	protected static void createInternationalFlightsTable() 
+			throws SQLException {
+		String sql = "CREATE TABLE IF NOT EXISTS international_flights "
+				+ "(id INTEGER NOT NULL AUTO_INCREMENT, "
+				+ "start VARCHAR(45), dest VARCHAR(45), "
+				+ "time VARCHAR(45), pricePerTicket DOUBLE, "
+				+ "totalSeats INTEGER NULL, availableSeats INTEGER NULL, "
+				+ "PRIMARY KEY ( id ))";
+		stmt.executeUpdate(sql);
+		
+		// Set flight id
+		sql = "ALTER TABLE domestic_flights AUTO_INCREMENT = 1001";
+		stmt.executeUpdate(sql);
+	}
+	
+	
+	protected static void insertInternationalFlightsTable() 
+			throws SQLException {
+		String sql = "INSERT INTO international_flights (`start`, `dest`, `time`, `pricePerTicket`, "
+				+ "`totalSeats`, `availableSeats`) " 
+				+ "VALUES ('Atlanta, Georgia', 'Anchorage, Alaska', '4:50a', 375.00, 100, 100), "
+				+ "('Atlanta, Georgia', 'Boston, Massachusetts', '9:15a', 205.00, 100, 100), "
+				+ "('Atlanta, Georgia', 'Chicago, Illinois', '8:30a', 210.00, 100, 100), "
+				+ "('Atlanta, Georgia', 'Cleveland, Ohio', '8:45p', 215.00, 100, 100), "
+				+ "('Atlanta, Georgia', 'Los Angeles, California', '10:00a', 315.00, 100, 100), "
+	      		+ "('Atlanta, Georgia', 'Dallas, Texas', '6:30a', 230.00, 100, 100), " 
+	      		+ "('Atlanta, Georgia', 'Detroit, Michigan', '4:30p', 290.00, 100, 100), "
+	      		+ "('Atlanta, Georgia', 'Honolulu, Hawaii', '9:15a', 400.00, 100, 100), "
+	      		+ "('Atlanta, Georgia', 'Kansas City, Missouri', '12:25p', 265.00, 100, 100), "
+	      		+ "('Atlanta, Georgia', 'Las Vegas, Nevada', '3:10p', 340.00, 100, 100), "
+				+ "('Atlanta, Georgia', 'Miami, Florida', '1:30p', 195.00, 100, 100), "
+				+ "('Atlanta, Georgia', 'Minneapolis, Minnesota', '7:30a', 285.00, 100, 100), "
+				+ "('Atlanta, Georgia', 'Nashville, Tennessee', '5:35a', 180.00, 100, 100), "
+	      		+ "('Atlanta, Georgia', 'New York City, New York', '5:35a', 280.00, 100, 100), "
+	      		+ "('Atlanta, Georgia', 'Phoenix, Arizona', '1:50p', 305.00, 100, 100), "
+				+ "('Atlanta, Georgia', 'Salt Lake City, Utah', '2:30p', 310.00, 100, 100), "
+	      		+ "('Atlanta, Georgia', 'Seattle, Washington', '11:25a', 325.00, 100, 100), "
+	      		+ "('Atlanta, Georgia', 'Washington D.C.', '1:45p', 260.00, 100, 100) " 
+	      		+ "ON DUPLICATE KEY UPDATE `id` = `id`";
+	    stmt.executeUpdate(sql);
+	}
+	
+	
+	protected static void selectInternationalFlightsTable() 
+			throws SQLException {
+		System.out.println("\nSelecting domestic flights table...");	    
+	    String sql = "SELECT id, start, dest, time, pricePerTicket, totalSeats, "
+	    		+ "availableSeats FROM international_flights";
+	    ResultSet rs = stmt.executeQuery(sql);
+
+	    printFlightsTable(rs);
+	    rs.close();
+	}
+	
+	
 	protected static void createCustomerFlightsTable() 
 			throws SQLException {
 		String sql = "CREATE TABLE IF NOT EXISTS customer_flights " +
@@ -305,8 +360,9 @@ public class DBConnection {
 	protected boolean isValidLogin(String username, String password) {
 		try {
 		    if (username != null && password != null) {
-		    	String sql = "SELECT id, username, password, userType FROM users WHERE "
-		    			+ "username='" + username + "' and password='" + password + "'";
+		    	String sql = "SELECT id, username, password, userType FROM "
+		    			+ "users WHERE username='" + username + "' AND "
+		    			+ "password='" + password + "'";
 		    	ResultSet rs = stmt.executeQuery(sql);
 		    	if (rs.next()) {
 		    		String dbUsername = rs.getString("username");
@@ -314,7 +370,7 @@ public class DBConnection {
 		    		userType = rs.getString("userType");
 
 		    		if (dbUsername.equals(username) && dbPassword.equals(password)) {
-		    			assignPermissions(dbUsername, userType);
+		  
 		    			return true;
 		    		}
 		    	}
@@ -349,25 +405,14 @@ public class DBConnection {
 		return false;
 	}
 	
-	protected void assignPermissions(String dbUsername, String userType) {
-		try {
-			if (userType == "admin") {
-				String sql = "GRANT ALL PRIVILEGES ON *.* TO '" + userType 
-						+ "'@'localhost' WITH GRANT OPTION";
-				stmt.executeQuery(sql);
-				
-				sql = "GRANT ALL PRIVILEGES ON *.* TO '" + userType 
-						+ "'@'%' WITH GRANT OPTION";
-				stmt.executeQuery(sql);
-			}
-		} catch (SQLException err) {
-			JOptionPane.showMessageDialog(null, err.getMessage());
-		}
-	}
+	
+
+	
 
 	protected String getUserType() {
 		return userType;
 	}
+	
 	
 	protected String getStartColumn(String tableName, String columnName) {
 		String departCity = null;
@@ -383,6 +428,7 @@ public class DBConnection {
 		}
 		return departCity;
 	}
+	
 	
 	protected String[] getDestColumn(String tableName, String columnName) {
 		String[] destCity = new String[19];
@@ -405,11 +451,13 @@ public class DBConnection {
 		return destCity;
 	}
 	
+	
 	protected String[] getFlightInfo(String tableName, String[] flightInput) {
 		String[] flight = new String[7];
 		try {
-			String sql = "SELECT id, start, dest, time, pricePerTicket, totalSeats, availableSeats FROM " + tableName + " WHERE dest='" 
-					+ flightInput[1] + "'";
+			String sql = "SELECT id, start, dest, time, pricePerTicket, "
+					+ "totalSeats, availableSeats FROM " + tableName 
+					+ " WHERE dest='" + flightInput[1] + "'";
 		    ResultSet rs = stmt.executeQuery(sql);
 		    
 		    while (rs.next()) {
@@ -420,15 +468,56 @@ public class DBConnection {
 		        flight[4] = rs.getString("pricePerTicket");
 		        flight[5] = rs.getString("totalSeats");
 		        flight[6] = rs.getString("availableSeats");		        
-		    } 
+		    }
 		} catch (SQLException e) {
 		    e.printStackTrace();
 		}
 		return flight;
 	}
 	
+	
+	protected int checkForConflicts(String[] flight, String[] bookingInfo, 
+			String username) {
+		try {
+			// Check for duplicate flight
+			String sql = "SELECT * FROM customer_flights WHERE username='" 
+					+ username + "' AND fID='" + flight[0] + "' AND fDest='" 
+					+ bookingInfo[1] + "' AND fDate='" + bookingInfo[2] + "'";
+			ResultSet rs = stmt.executeQuery(sql);
+			
+			while (rs.next()) {
+				String id = rs.getString("fID");
+				String dest = rs.getString("fDest");
+				String date = rs.getString("fDate");
+
+				if (id.equals(flight[0]) && dest.equals(bookingInfo[1]) 
+						&& date.equals(bookingInfo[2])) {
+					return 1; 
+				}
+			}
+			
+			// Check for scheduling conflict
+			sql = "SELECT * FROM customer_flights WHERE username='" 
+					+ username + "' AND fDate='" + bookingInfo[2] + "'";
+			rs = stmt.executeQuery(sql);
+			
+			while (rs.next()) {
+				String date = rs.getString("fDate");
+
+				if (date.equals(bookingInfo[2])) { //must check time too
+					return 2;
+				}
+			}
+		} catch (SQLException err) {
+			JOptionPane.showMessageDialog(null, err.getMessage());
+		}
+		return 0;
+	}
+	
+	
 	protected boolean bookNewFlight(String[] flight, String date, int totalCost, 
-			int nAdults, int nChildren, int nInfants, String username) {
+			int nAdults, int nChildren, int nInfants, String username, int 
+			available, int seatsWanted, String tableName) {
 		try {
 			String sql = "INSERT INTO customer_flights (`username`, `fID`, `fStart`, "
 					+ "`fDest`, `fTime`, `fDate`, `price`, `adults`, `children`, "
@@ -436,6 +525,12 @@ public class DBConnection {
 					+ "', '" + flight[1]  + "', '" + flight[2] + "', '" + flight[3] + "', '" 
 					+ date + "', '" + flight[4] + "', '" + nAdults + "', '" + nChildren 
 					+ "', '" + nInfants + "', '" + totalCost + "')";			stmt.executeUpdate(sql);
+			
+			available -= seatsWanted;
+			sql = "UPDATE " + tableName + " SET availableSeats = '" + available 
+					+ "' WHERE id = '" + flight[0] + "'";
+			stmt.executeUpdate(sql);
+			
 			JOptionPane.showMessageDialog(null, "Flight successfully booked");
 			return true;		} catch (SQLException err) {
 			JOptionPane.showMessageDialog(null, err.getMessage());

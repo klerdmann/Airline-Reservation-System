@@ -7,7 +7,6 @@ import java.util.List;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFormattedTextField;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -18,8 +17,6 @@ import javax.swing.text.MaskFormatter;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class AirlineReservation {
 	protected String username;
@@ -314,7 +311,8 @@ public class AirlineReservation {
 				choice = readMenuChoice("Select one of the following options:\n"
 						+ "\t1: Book a Domestic Flight\n" 
 						+ "\t2: Book an International Flight\n"
-						+ "\t3: Manage Reservations\n", 4);
+						+ "\t3: Manage Reservations\n"
+						+ "\t4: Log Out\n", 4);
 
 				switch (choice) {
 					case 1:	bookDomesticFlight(); break;
@@ -375,12 +373,8 @@ public class AirlineReservation {
 	 * to be your implementation such as using GUI instead of the console
 	 */
 	public void startApp() {
-		// Authenticate the user first and find out which accounts the user
-		// Is authorized to access
+		// Authenticate the user first
 		procUserLogin();
-
-		// Loop forever until the user select to end the application
-		//manageMainMenu();
 	}
 
 	
@@ -388,7 +382,7 @@ public class AirlineReservation {
 	 * Display a number of options and return a choice of one of the options
 	 */
 	public int readMenuChoice(String message, int lastOption) {
-		// loop forever until the user enter a positive integer
+		// Loop forever until the user enter a positive integer
 		int menuChoice = 0;	
 		do {
 			try {
@@ -411,7 +405,8 @@ public class AirlineReservation {
 						"Error", JOptionPane.ERROR_MESSAGE);
 			}
 		} while (menuChoice <= 0);
-		return menuChoice;	// Return the entered integer
+		
+		return menuChoice;
 	}
 
 		
@@ -434,28 +429,11 @@ public class AirlineReservation {
 			    infants.add(i);
 			}
 		}
-
-		// Format the input dialog box
-		// Create JPanel object
-		JPanel panel = new JPanel(new BorderLayout(15, 12));
-		        
-		// Format the header and display the welcome message
-		JPanel header = new JPanel(new GridLayout(1, 15));
-		header.add(new JLabel("Booking & Passenger Details: ", 
-		    	SwingConstants.CENTER));
-		panel.add(header, BorderLayout.NORTH);
-		            
-		// Format the labels
-		JPanel label = new JPanel(new GridLayout(0, 1, 2, 2));
-		label.add(new JLabel("From: ", SwingConstants.RIGHT));
-		label.add(new JLabel("To: ", SwingConstants.RIGHT));
-		label.add(new JLabel("Date: ", SwingConstants.RIGHT));
-		label.add(new JLabel("Adults: ", SwingConstants.RIGHT));
-		label.add(new JLabel("Children: ", SwingConstants.RIGHT));
-		label.add(new JLabel("Infants: ", SwingConstants.RIGHT));
-		panel.add(label, BorderLayout.WEST);
-
-		// Format the input fields
+		
+		// Create formatting class object
+		Formatting f1 = new Formatting();
+		
+		// Create input fields and assign values
 		JPanel controls = new JPanel(new GridLayout(0, 1, 2, 2));
 		JTextField depart = new JTextField(departCity);
 		depart.setEditable(false);
@@ -463,41 +441,33 @@ public class AirlineReservation {
 		JComboBox<?> selectDest = new JComboBox<Object>(destCity);
 		controls.add(selectDest);		
 		JTextField selectDate = new JTextField(12);
-      	JButton b = new JButton("...");
-      	selectDate.setColumns(5);
-      	b.setPreferredSize(new Dimension(40, 10));
-      	controls.add(selectDate);
-      	setupSelectButton(controls, b, selectDate);      	
+		JButton b = new JButton("...");
+		selectDate.setColumns(5);
+		b.setPreferredSize(new Dimension(40, 10));
+		controls.add(selectDate);
+		f1.setupDateSelectButton(controls, b, selectDate);      	
 		JComboBox<?> selectAdults = new JComboBox<Object>(adults.toArray());
 		controls.add(selectAdults);
 		JComboBox<?> selectChildren = new JComboBox<Object>(children.toArray());
 		controls.add(selectChildren);
 		JComboBox<?> selectInfants = new JComboBox<Object>(infants.toArray());
 		controls.add(selectInfants);
-		panel.add(controls, BorderLayout.CENTER);
 		
-		// Format the spacing to left where the date button is
-		JPanel space = new JPanel(new GridLayout(0, 1, 2, 2));
-		space.add(javax.swing.Box.createGlue());
-		space.add(javax.swing.Box.createGlue());
-		space.add(b);
-		space.add(javax.swing.Box.createGlue());
-		space.add(javax.swing.Box.createGlue());
-		space.add(javax.swing.Box.createGlue());
-		panel.add(space, BorderLayout.EAST);
-
- 		// Display booking form
+		// Display booking form
 		boolean cont = true;
 		int result;
 		do {
+			JPanel panel = f1.getBookingForm(controls, b, departCity, destCity, 
+					adults, children, infants);
+			
 			// Display the dialog box
 			Object[] choices = { "Search Flights", "Back To Menu" };
 			Object defaultChoice = choices[0];
 			result = JOptionPane.showOptionDialog(null, panel, "Book a Flight", 
 					JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE, 
 					null, choices, defaultChoice);
-	
-			String[] bookingInfo = new String[5];
+			
+			String[] bookingInfo = new String[3];
 			int[] passengerInfo = new int[3];
 			// Validate the user's selection and input
 			if (result == JOptionPane.OK_OPTION) {
@@ -507,6 +477,9 @@ public class AirlineReservation {
 				passengerInfo[0] = (int) selectAdults.getSelectedItem();
 				passengerInfo[1] = (int) selectChildren.getSelectedItem();
 				passengerInfo[2] = (int) selectInfants.getSelectedItem();
+				JOptionPane.showMessageDialog(null, bookingInfo[0]);
+				JOptionPane.showMessageDialog(null, bookingInfo[1]);
+				JOptionPane.showMessageDialog(null, bookingInfo[2]);
 				
 				int count = 0;
 				for (int i = 0; i < 3; i++) {
@@ -523,49 +496,63 @@ public class AirlineReservation {
 				}
 				else {
 					String[] flight = new String[7];
-					flight = db.getFlightInfo("domestic_flights", bookingInfo);					
-					int price = Integer.parseInt(flight[4]);
-					int available = Integer.parseInt(flight[6]);		    
-					int seatsWanted = passengerInfo[0] + passengerInfo[1];  // Infants sit in laps
-					int totalCost = 0;
-					String year = bookingInfo[2].substring(0, 4);
-					String month = bookingInfo[2].substring(6, 7);
-					String day = bookingInfo[2].substring(8, 10);
-					String date = month + "-" + day  + "-" + year;
-					    
-					if (available == 0) {
-					    JOptionPane.showMessageDialog(null, 
-								"This flight is full", "Error", 
+					flight = db.getFlightInfo("domestic_flights", bookingInfo);
+					int conflictCode = db.checkForConflicts(flight, bookingInfo, username);
+
+					if (conflictCode == 1) {
+						// Conflict type 1: Duplicate flight
+						JOptionPane.showMessageDialog(null, "You cannot book the "
+								+ "same flight more than once", "Error", 
 								JOptionPane.ERROR_MESSAGE);
-					}					    
-					if ((available - seatsWanted) >= 0) {
-					    String message = "There are " + seatsWanted + " seats "
-					    		+ "available on " + date + " at " 
-					    		+ flight[3] + " for $" + price + " per ticket. "
-					    		+ "Do you want to book now?";
-					    int option = JOptionPane.showConfirmDialog(null, message);
-					    if (option == 0) {
-					    	totalCost = seatsWanted * price;
-					    	boolean success = db.bookNewFlight(flight, bookingInfo[2], 
-					    			totalCost, passengerInfo[0], passengerInfo[1], 
-					    			passengerInfo[2], username);
-					    	if (success == true) {
-					    		manageMainMenu();
-					    	}
-					    }
-					    if (option == 1) {
-					    	manageMainMenu();
-					    }
-					    else {
-					    	// Terminate the application
-					    	System.exit(0);
-					    }
 					}
-					//boolean success = db.bookNewFlight(flightInput);
-					//if (success == true) {
-					// Go to login screen
-					//procUserLogin();
-					//}
+					else if (conflictCode == 2) {
+						// Conflict type 2: Overlapping flight
+						JOptionPane.showMessageDialog(null, "There's a conflict with "
+								+ "another flight you have booked that day \nPlease "
+								+ "choose a different date or cancel your other flight", 
+								"Error", JOptionPane.ERROR_MESSAGE);
+					}
+					else {
+						// Returns 0: No conflict
+						int price = Integer.parseInt(flight[4]);
+						int available = Integer.parseInt(flight[6]);		    
+						int seatsWanted = passengerInfo[0] + passengerInfo[1];  // Infants sit in laps
+						int totalCost = 0;
+						String year = bookingInfo[2].substring(0, 4);
+						String month = bookingInfo[2].substring(6, 7);
+						String day = bookingInfo[2].substring(8, 10);
+						String date = month + "-" + day  + "-" + year;
+					    
+						if (available == 0) {
+							JOptionPane.showMessageDialog(null, 
+									"This flight is full", "Error", 
+									JOptionPane.ERROR_MESSAGE);
+						}					    
+						if ((available - seatsWanted) >= 0) {
+							String message = "There are " + seatsWanted + " seats "
+									+ "available on " + date + " at " 
+									+ flight[3] + " for $" + price + " per ticket. "
+									+ "Do you want to book now?";
+							int option = JOptionPane.showConfirmDialog(null, message);
+							if (option == 0) {
+								totalCost = seatsWanted * price;
+								boolean success = db.bookNewFlight(flight, bookingInfo[2], 
+										totalCost, passengerInfo[0], passengerInfo[1], 
+										passengerInfo[2], username, available, seatsWanted, 
+										"domestic_flights");
+								if (success == true) {
+									manageMainMenu();
+								}
+							}
+							if (option == 1) {
+								manageMainMenu();
+							}
+							else {
+								// Terminate the application
+								System.exit(0);
+							}
+						}
+					}
 				}
 			}
 			if (result == JOptionPane.CANCEL_OPTION || result == 1) {
@@ -578,21 +565,9 @@ public class AirlineReservation {
 		    	System.exit(0);
 		    }
 		} while (cont == true);
-		// Loop until the user select an option
 
+		// Continue the application
 		manageMainMenu();
-	}
-	
-	public void setupSelectButton(JPanel controls, JButton b, JTextField selectDate) {
-		JFrame f = new JFrame();
-      	f.getContentPane().add(controls);
-      	
-      	// Add action listener
-      	b.addActionListener(new ActionListener() {
-      		public void actionPerformed(ActionEvent ae) {
-      			selectDate.setText(new DatePicker(f).setPickedDate());
-      		}
-        });
 	}
 		
 		
