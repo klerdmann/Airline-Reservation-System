@@ -5,13 +5,17 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.swing.JOptionPane;
 
 public class DBConnection {
 	protected static String userType;
 	protected static Statement stmt = null;
 	protected static Connection conn = null;
-	
+
 	// JDBC driver name and database URL
 	protected static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";  
 	protected static final String DB_URL = "jdbc:mysql://localhost:3306/airline_system?useSSL=false";
@@ -22,7 +26,7 @@ public class DBConnection {
 		
 	public DBConnection() {
 	    connect();
-	}	
+	}
 	
 	protected static Connection connect() {
 		try {
@@ -45,13 +49,13 @@ public class DBConnection {
 		try {
 			connect();
 			
-			// Create database
+			// Create database:
 			//createDB();
 
 			// Create tables:
 			//createUsersTable();
 			//createFlightsTable("domestic_flights");
-			createFlightsTable("international_flights");
+			//createFlightsTable("international_flights");
 			//createCustomerFlightsTable();
       
 			// Insert initial table data:
@@ -181,7 +185,12 @@ public class DBConnection {
 		stmt.executeUpdate(sql);
 		
 		// Set flight id
-		sql = "ALTER TABLE " + tableName + " AUTO_INCREMENT = 1001";
+		if (tableName == "domestic_flights") {
+			sql = "ALTER TABLE domestic_flights AUTO_INCREMENT = 1001";
+		}
+		else {
+			sql = "ALTER TABLE international_flights AUTO_INCREMENT = 2001";
+		}
 		stmt.executeUpdate(sql);
 	}
 	
@@ -233,7 +242,7 @@ public class DBConnection {
 	      		+ "('Atlanta, Georgia', 'Oslo, Norway', '1:50p', 385.00, 100, 100), "
 				+ "('Atlanta, Georgia', 'Toronto, Canada', '5:30p', 310.00, 100, 100), "
 	      		+ "('Atlanta, Georgia', 'Dublin, Ireland', '11:45a', 425.00, 100, 100), "
-	      		+ "('Atlanta, Georgia', 'Rio de Janeiro, Brazil', '7:30a', 385.00, 100, 100), "
+	      		+ "('Atlanta, Georgia', 'Sao Paulo, Brazil', '7:30a', 385.00, 100, 100), "
 	      		+ "('Atlanta, Georgia', 'Madrid, Spain', '4:05p', 445.00, 100, 100) " 
 	      		+ "ON DUPLICATE KEY UPDATE `id` = `id`";
 	    stmt.executeUpdate(sql);
@@ -266,7 +275,8 @@ public class DBConnection {
 				" adults INTEGER NULL, " + 
 				" children INTEGER NULL, " + 
 				" infants INTEGER NULL, " + 
-				" pTotal DOUBLE NULL, "
+				" pTotal DOUBLE NULL, " +
+				" type VARCHAR(225), "
 				+ "PRIMARY KEY ( id ))";
 		stmt.executeUpdate(sql);
 		
@@ -280,7 +290,7 @@ public class DBConnection {
 			throws SQLException {
 		System.out.println("\nSelecting customer_flights table...");	    
 	    String sql = "SELECT id, username, fID, fStart, fDest, fTime, "
-	    		+ "fDate, price, adults, children, infants, pTotal "
+	    		+ "fDate, price, adults, children, infants, pTotal, type "
 			+ "FROM customer_flights";
 	    ResultSet rs = stmt.executeQuery(sql);
 
@@ -310,7 +320,7 @@ public class DBConnection {
 	        System.out.println("ID: " + id + " Username: " + username 
 	        		+ " Flight ID: " + fID + " To: " + start + " From: " 
 	        		+ dest + " Time: " + time + " Date: " + date 
-	        		+ " Price Per Ticket: " + pricePerTicket + " Adults: " 
+	        		+ " Ticket Price: " + pricePerTicket + " Adults: " 
 	        		+ adults + " Children: " + children + " Infants: " 
 	        		+ infants + " Total Price: " + totalPrice);
 		}
@@ -331,7 +341,7 @@ public class DBConnection {
 	        
 	        // Display values
 	        System.out.println("ID: " + id + ", To: " + start + ", "
-	        		+ "From: " + dest + " Time: " + time + " Price Per Ticket: " 
+	        		+ "From: " + dest + " Time: " + time + " Ticket Price: " 
 	        		+ pricePerTicket + " Total Seats: " + totalSeats 
 	        		+ " Available Seats: " + availableSeats);
 		}
@@ -365,6 +375,7 @@ public class DBConnection {
 		    			return true;
 		    		}
 		    	}
+		    	rs.close();
 		    }
 		} catch (SQLException err) {
 			JOptionPane.showMessageDialog(null, err.getMessage());
@@ -406,6 +417,7 @@ public class DBConnection {
 		    if (rs.next()) {
 		        departCity = rs.getString("start");
 		    }
+		    rs.close();
 		} catch (SQLException e) {
 		    e.printStackTrace();
 		}
@@ -413,16 +425,18 @@ public class DBConnection {
 	}
 	
 	
-	protected String[] getDestColumn(String tableName, String columnName) {
-		String[] destCity = new String[19];
+	protected List<String> getDestColumn(String tableName, String columnName) {
+		List<String> destCity = new ArrayList<String>();
+		String[] dest = new String[40];
 		try {
 			String sql = "SELECT " + columnName + " FROM " + tableName;
 		    ResultSet rs = stmt.executeQuery(sql);
 		    
-		    destCity[0] = "Select";
+		    destCity.add("Select"); // Set default value
 		    int counter = 1;
 		    while (rs.next()) {
-		        destCity[counter] = rs.getString("dest");
+		        dest[counter] = rs.getString("dest");	        
+		        destCity.add(dest[counter]);
 		        counter++;
 		    }
 		} catch (SQLException e) {
@@ -449,6 +463,7 @@ public class DBConnection {
 		        flight[5] = rs.getString("totalSeats");
 		        flight[6] = rs.getString("availableSeats");		        
 		    }
+		    rs.close();
 		} catch (SQLException e) {
 		    e.printStackTrace();
 		}
@@ -460,7 +475,7 @@ public class DBConnection {
 			String username) {
 		try {
 			// Check for duplicate flight
-			String sql = "SELECT * FROM customer_flights WHERE username='" 
+			String sql = "SELECT * FROM customer_flights WHERE username = '" 
 					+ username + "' AND fID='" + flight[0] + "' AND fDest='" 
 					+ bookingInfo[1] + "' AND fDate='" + bookingInfo[2] + "'";
 			ResultSet rs = stmt.executeQuery(sql);
@@ -490,6 +505,7 @@ public class DBConnection {
 					return 2;
 				}
 			}
+			rs.close();
 		} catch (SQLException e) {
 			JOptionPane.showMessageDialog(null, e.getMessage());
 		}
@@ -503,14 +519,15 @@ public class DBConnection {
 		try {
 			String sql = "INSERT INTO customer_flights (`username`, `fID`, `fStart`, "
 					+ "`fDest`, `fTime`, `fDate`, `price`, `adults`, `children`, "
-					+ "`infants`, `pTotal`) " + "VALUES ('" + username + "', '" + flight[0] 
+					+ "`infants`, `pTotal`, `type`) " + "VALUES ('" + username + "', '" + flight[0] 
 					+ "', '" + flight[1]  + "', '" + flight[2] + "', '" + flight[3] + "', '" 
 					+ date + "', '" + flight[4] + "', '" + nAdults + "', '" + nChildren 
-					+ "', '" + nInfants + "', '" + totalCost + "')";			stmt.executeUpdate(sql);
+					+ "', '" + nInfants + "', '" + totalCost + "', '" + tableName + "')";			stmt.executeUpdate(sql);
 			
+			// Decrease the number of available seats
 			available -= seatsWanted;
-			sql = "UPDATE " + tableName + " SET availableSeats = '" + available 
-					+ "' WHERE id = '" + flight[0] + "'";
+			sql = "UPDATE " + tableName + " SET availableSeats='" + available 
+					+ "' WHERE id='" + flight[0] + "'";
 			stmt.executeUpdate(sql);
 			
 			JOptionPane.showMessageDialog(null, "Flight successfully booked");
@@ -521,6 +538,99 @@ public class DBConnection {
 	}
 	
 	
+	protected List<String> getCustBookings(String username) {
+		List<String> custBookings = new ArrayList<String>();
+		String[] row = new String[15];
+		DecimalFormat df = new DecimalFormat("#.00");
+		try {
+			String sql = "SELECT * FROM customer_flights WHERE username='" 
+					+ username + "'";
+			ResultSet rs = stmt.executeQuery(sql);
+			int i = 0;
+			
+			while (rs.next()) {			
+				int id  = rs.getInt("id");
+		        String start = rs.getString("fStart");
+		        String dest = rs.getString("fDest");
+		        String time = rs.getString("fTime");
+		        String date = rs.getString("fDate");
+		        double price = rs.getDouble("price");
+		        int adults = rs.getInt("adults");
+		        int children = rs.getInt("children");
+		        int infants = rs.getInt("infants");
+		        double total = rs.getDouble("pTotal");
+		        
+		        String str = "From: " + start + " | To: " + dest + " | Time: " 
+		        		+ time + " | Date: " + date + " | Ticket Price: $" 
+		        		+ df.format(price) + " | Adults: " + adults + " | ";
+		        if (children > 0) {
+		        	str += "Children: " + children + " | ";
+		        }
+		        if (infants > 0) {
+		        	str += "Infants: " + infants + " | ";
+		        }
+		        str += "Total: $" + df.format(total) + " | ID: " + id + " ";
+		        row[i] = str;
+		        
+		        // Display values
+		        System.out.println(row[i]);
+		        custBookings.add(row[i]);
+		        i++;
+			}
+
+			rs.close();
+		} catch (SQLException e) {
+			JOptionPane.showMessageDialog(null, e.getMessage());
+		}
+		return custBookings;
+	}
+	
+	
+	protected void deleteCustBooking(String id) {
+		String tableName = "";
+		int fID = 0;
+		int adults = 0;
+		int children = 0;
+		int available = 0;
+		try {
+			// Retrieve the selected flight and num of passengers
+			String sql = "SELECT * FROM customer_flights WHERE id='" + id + "'";
+			ResultSet rs = stmt.executeQuery(sql);
+			
+			while (rs.next()) {
+				fID = rs.getInt("fID");
+				tableName = rs.getString("type");
+				adults  = rs.getInt("adults");
+				children  = rs.getInt("children");
+			}
+			
+			// Determine the number of seats the user booked			
+			sql = "SELECT * FROM " + tableName + " WHERE id='" + fID + "'";
+			rs = stmt.executeQuery(sql);
+			
+			if (rs.next()) {
+				available  = rs.getInt("availableSeats");				
+			}
+			
+			// Delete flight reservation
+			sql = "DELETE FROM customer_flights WHERE id='" + id + "'";
+			stmt.executeUpdate(sql);
+			
+			// Decrease the number of available seats
+			int seatsWanted = adults + children;
+			available -= seatsWanted;
+			sql = "UPDATE " + tableName + " SET availableSeats='" + available 
+					+ "' WHERE id='" + fID + "'";
+			stmt.executeUpdate(sql);
+			JOptionPane.showMessageDialog(null, "Flight successfully deleted");
+
+		} catch (SQLException e) {
+			JOptionPane.showMessageDialog(null, e.getMessage());
+		}
+	}
+	
+	
+	// Admin function
 	protected boolean addNewFlight(String tableName, String[] flight) {
 		try {
 			String sql = "INSERT INTO " + tableName + " (`start`, `dest`, `time`, "
@@ -539,14 +649,11 @@ public class DBConnection {
 	}
 	
 	
-	protected boolean updateFlight(String tableName, String[] flight) {
+	// Admin function
+	protected boolean updateFlight(String tableName, String[] flight, String id) {
 		try {
-			String sql = "INSERT INTO " + tableName + " (`start`, `dest`, `time`, "
-					+ "`pricePerTicket`, `totalSeats`, `availableSeats`) " + 
-					"VALUES ('" + flight[0] + "', '" + flight[1] + "', '" + 
-					flight[2] + "', '" + flight[3] + "', '" + flight[4] + 
-					"', '" + flight[5] + "')";
-			
+			String sql = "UPDATE " + tableName + " SET " + flight[1] + "='" 
+					+ flight[2] + "' WHERE id='" + id + "'";
 			stmt.executeUpdate(sql);
 			JOptionPane.showMessageDialog(null, "Flight successfully updated");
 			return true;
@@ -557,14 +664,48 @@ public class DBConnection {
 	}
 	
 	
-	protected boolean deleteFlight(String tableName, String[] flight) {
+	protected List<String> getAllFlights() {
+		List<String> flights = new ArrayList<String>();
+		String[] row = new String[65];
 		try {
-			String sql = "INSERT INTO " + tableName + " (`start`, `dest`, `time`, "
-					+ "`pricePerTicket`, `totalSeats`, `availableSeats`) " + 
-					"VALUES ('" + flight[0] + "', '" + flight[1] + "', '" + 
-					flight[2] + "', '" + flight[3] + "', '" + flight[4] + 
-					"', '" + flight[5] + "')";
+			flights.add("Select"); // Set default value
+			String sql = "SELECT * FROM domestic_flights";
+			ResultSet rs = stmt.executeQuery(sql);
+			int i = 0;
 			
+			while (rs.next()) {
+				String dest = rs.getString("dest");
+				String id = rs.getString("id");
+				
+		        row[i] = "Destination: " + dest + " | ID: " + id + "";
+		        flights.add(row[i]);
+		        i++;
+			}
+			
+			sql = "SELECT * FROM international_flights";
+			rs = stmt.executeQuery(sql);
+			
+			while (rs.next()) {
+				String dest = rs.getString("dest");
+				String id = rs.getString("id");
+				
+		        row[i] = "Destination: " + dest + " | ID: " + id + "";
+		        flights.add(row[i]);
+		        i++;
+			}
+
+			rs.close();
+		} catch (SQLException e) {
+			JOptionPane.showMessageDialog(null, e.getMessage());
+		}
+		return flights;
+	}
+	
+	
+	// Admin function
+	public boolean deleteFlight(String tableName, String id) {
+		try {
+			String sql = "DELETE FROM " + tableName + " WHERE id='" + id + "'";
 			stmt.executeUpdate(sql);
 			JOptionPane.showMessageDialog(null, "Flight successfully deleted");
 			return true;
@@ -572,26 +713,5 @@ public class DBConnection {
 			JOptionPane.showMessageDialog(null, e.getMessage());
 		}
 		return false;
-	}
-	
-	public void updateTableData(String tableName, String[] flight) {
-		try {
-			String sql = "UPDATE registration SET "
-					+ "age = 30 WHERE id in (100, 101)";
-			stmt.executeUpdate(sql);
-		} catch (SQLException e) {
-			JOptionPane.showMessageDialog(null, e.getMessage());
-		}//incomplete
-	}
-	
-	public void deleteTableData(String tableName, String[] flight) {
-		try {
-			String sql = "DELETE FROM " + tableName + " WHERE id = '" 
-					+ flight[0] + "'";
-			stmt.executeUpdate(sql);
-			JOptionPane.showMessageDialog(null, "Flight successfully deleted");
-		} catch (SQLException e) {
-			JOptionPane.showMessageDialog(null, e.getMessage());
-		}
 	}
 }

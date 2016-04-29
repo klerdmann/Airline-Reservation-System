@@ -1,7 +1,6 @@
 package edu.gsu.cis.GroupProject;
 
 import java.awt.BorderLayout;
-import java.awt.ComponentOrientation;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -125,51 +124,22 @@ public class Formatting {
       		}
         });
 	}
-
 	
-	public static void getReservationTable() {
+	
+	public JPanel getReservationsTable(JPanel controls) {
 		// Format the input dialog box
 		// Create JPanel object
-		JFrame frame = new JFrame();
-		frame.setVisible(true);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setSize(800, 500);
-					            
-		// Format the labels
-		JPanel panel = new JPanel();
-		
-		panel.setLayout(new GridLayout(1, 11, 2, 2));
-		JLabel l2 = new JLabel("Username:");
-		JLabel l3 = new JLabel("Flight ID:");
-		JLabel l4 = new JLabel("To:");
-		JLabel l5 = new JLabel("From:");
-		JLabel l6 = new JLabel("Time:");
-		JLabel l7 = new JLabel("Date:");
-		JLabel l8 = new JLabel("Price:");
-		JLabel l9 = new JLabel("Adults:");
-		JLabel l10 = new JLabel("Children:");
-		JLabel l11 = new JLabel("Infants:");
-		JLabel l12 = new JLabel("Total Price:");
-		panel.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
-		panel.add(l2);
-		panel.add(l3);
-		panel.add(l4);
-		panel.add(l5);
-		panel.add(l6);
-		panel.add(l7);
-		panel.add(l8);
-		panel.add(l9);
-		panel.add(l10);
-		panel.add(l11);
-		panel.add(l12);
-		
-		frame.add(panel);
-		
+		JPanel panel = new JPanel(new BorderLayout(6, 6));
+					        
+		// Format the header and display the welcome message
+		JPanel header = new JPanel(new GridLayout(1, 6));
+		header.add(new JLabel("Manage Your Flights", SwingConstants.CENTER));
+		panel.add(header, BorderLayout.NORTH);
 		
 		// Format the input fields
-		//panel.add(controls, BorderLayout.CENTER);
-
+		panel.add(controls, BorderLayout.CENTER);		
 		
+		return panel;
 	}
 	
 
@@ -189,7 +159,7 @@ public class Formatting {
 		label.add(new JLabel("From: ", SwingConstants.RIGHT));
 		label.add(new JLabel("To: ", SwingConstants.RIGHT));
 		label.add(new JLabel("Time: ", SwingConstants.RIGHT));
-		label.add(new JLabel("Price Per Ticket: ", SwingConstants.RIGHT));
+		label.add(new JLabel("Ticket Price: ", SwingConstants.RIGHT));
 		label.add(new JLabel("Total Seats: ", SwingConstants.RIGHT));
 		label.add(new JLabel("Available Seats: ", SwingConstants.RIGHT));
 		panel.add(label, BorderLayout.WEST);
@@ -199,6 +169,34 @@ public class Formatting {
 		
 		return panel;
 	}
+	
+	
+	public JPanel getUpdateFlightForm(JPanel controls) {
+		// Format the input dialog box
+		// Create JPanel object
+		JPanel panel = new JPanel(new BorderLayout(8, 8));
+			        
+		// Format the header and display the welcome message
+		JPanel header = new JPanel(new GridLayout(2, 8));
+		header.add(new JLabel("Update a Flight", SwingConstants.CENTER));
+		header.add(new JLabel("(Fill in only the fields you wish to update)", 
+				SwingConstants.CENTER));
+		panel.add(header, BorderLayout.NORTH);
+			            
+		// Format the labels
+		JPanel label = new JPanel(new GridLayout(0, 1, 2, 2));
+		label.add(new JLabel("Select Flight: ", SwingConstants.RIGHT));
+		label.add(new JLabel("Select Field: ", SwingConstants.RIGHT));
+		label.add(new JLabel("Input Field: ", SwingConstants.RIGHT));
+
+		panel.add(label, BorderLayout.WEST);
+		
+		// Format the input fields
+		panel.add(controls, BorderLayout.CENTER);
+		
+		return panel;
+	}
+	
 	
 	public JPanel getDeleteFlightForm(JPanel controls) {
 		// Format the input dialog box
@@ -212,9 +210,7 @@ public class Formatting {
 			            
 		// Format the labels
 		JPanel label = new JPanel(new GridLayout(0, 1, 2, 2));
-		label.add(new JLabel("Type: ", SwingConstants.RIGHT));
-		label.add(new JLabel("Table: ", SwingConstants.RIGHT));
-		label.add(new JLabel("Dest: ", SwingConstants.RIGHT));
+		label.add(new JLabel("Select Flight: ", SwingConstants.RIGHT));
 
 		panel.add(label, BorderLayout.WEST);
 		

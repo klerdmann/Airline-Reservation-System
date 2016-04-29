@@ -32,7 +32,7 @@ public class AirlineReservation {
 	public AirlineReservation() throws Exception {
 	}
 	
-	public void splashScreen() throws SQLException, ParseException {
+	public void optionScreen() throws SQLException, ParseException {
 		Object[] choices = { "Login", "Register" };
 		Object defaultChoice = choices[0];
 		int option = JOptionPane.showOptionDialog(null, 
@@ -249,7 +249,7 @@ public class AirlineReservation {
 			}
 			if (result == JOptionPane.CANCEL_OPTION || result == 1) {
 				// Go back to main menu
-				manageMainMenu();
+				optionScreen();
 			}
 	    	if (result == JOptionPane.CLOSED_OPTION) {
 	    		System.exit(0);  // Terminate the application
@@ -269,7 +269,7 @@ public class AirlineReservation {
 				choice = readMenuChoice("Select one of the following options:\n"
 						+ "\t1: Book a Domestic Flight\n" 
 						+ "\t2: Book an International Flight\n"
-						+ "\t3: Manage Reservations\n"
+						+ "\t3: View Reservations\n"
 						+ "\t4: Log Out\n", 4);
 
 				switch (choice) {
@@ -292,7 +292,7 @@ public class AirlineReservation {
 				choice = readMenuChoice("Select one of the following options:\n"
 						+ "\t1: Book a Domestic Flight\n" 
 						+ "\t2: Book an International Flight\n"
-						+ "\t3: Manage Reservations\n" 
+						+ "\t3: View Reservations\n" 
 						+ "\t4: Add a Flight\n" 
 						+ "\t5: Update a Flight\n"
 						+ "\t6: Delete a Flight\n"
@@ -390,8 +390,7 @@ public class AirlineReservation {
 	public void procFlightBooking(String tableName) throws Exception {
 		DBConnection db = new DBConnection();
 	    String departCity = db.getStartColumn(tableName, "start");
-		String[] destCity = new String[19];
-		destCity = db.getDestColumn(tableName, "dest");
+	    List<String> destCity = db.getDestColumn(tableName, "dest");
 
 		List<Integer> adults = new ArrayList<Integer>(6);
 		List<Integer> children = new ArrayList<Integer>(6);
@@ -412,7 +411,7 @@ public class AirlineReservation {
 		JTextField depart = new JTextField(departCity);
 		depart.setEditable(false);
 		controls.add(depart);
-		JComboBox<?> selectDest = new JComboBox<Object>(destCity);
+		JComboBox<?> selectDest = new JComboBox<Object>(destCity.toArray());
 		controls.add(selectDest);
 		JTextField selectDate = new JTextField(12);
 		JButton b = new JButton("...");
@@ -552,16 +551,63 @@ public class AirlineReservation {
 	/**
 	 * Process reservation management request
 	 */
-	public void	manageReservations() {
-		try {
-			
+	public void	manageReservations() throws SQLException, ParseException {
+		DBConnection db = new DBConnection();
+		List<String> sFlight = db.getCustBookings(username);
 
-		} catch (Exception ex) {
-			throw ex;
-		}
+		// Create formatting class object
+		Formatting form = new Formatting();
+		        
+		// Create input fields and assign values
+		JPanel controls = new JPanel(new GridLayout(0, 1, 2, 2));
+		JComboBox<?> selectFlight = new JComboBox<Object>(sFlight.toArray());
+		controls.add(selectFlight);
+		
+		// Display input form
+		boolean cont = true;
+		int result;
+		do {
+			JPanel panel = form.getReservationsTable(controls);
+				
+			// Display the dialog box
+			Object[] choices = { "Back To Menu", "Delete Selected Flight" };
+			Object defaultChoice = choices[0];
+			result = JOptionPane.showOptionDialog(null, panel, "Manage Flight "
+					+ "Reservations", JOptionPane.OK_CANCEL_OPTION, 
+					JOptionPane.PLAIN_MESSAGE, null, choices, defaultChoice);
+				
+			// Validate the user's selection and input
+			if (result == JOptionPane.OK_OPTION) {
+				// Go back to main menu
+				manageMainMenu();
+			}
+			if (result == JOptionPane.CANCEL_OPTION || result == 1) {
+				// Delete selected flight
+				String flight = (String) selectFlight.getSelectedItem();				
+				String id = flight.substring(flight.length() - 2);
+				
+				String message = "Are you sure you want to delete this flight?";
+				int option = JOptionPane.showConfirmDialog(null, message);
+				if (option == 0) {
+					db.deleteCustBooking(id);
+					manageReservations();				
+				}
+				if (option == 1) {
+					manageReservations();
+				}
+				else {
+					// Terminate the application
+					System.exit(0);
+				}
 
-		// Continue the application
-		manageMainMenu();
+			}
+		    if (result == JOptionPane.CLOSED_OPTION) {
+		    	System.exit(0);  // Terminate the application
+		    }
+		} while (cont == true);
+
+	// Continue the application
+	manageMainMenu();
 	}
 	
 	
@@ -572,6 +618,7 @@ public class AirlineReservation {
 	 */
 	public void	addFlight() throws SQLException, ParseException {
 		String[] fType = { "Select", "domestic_flights", "international_flights" };
+		String departCity = "Atlanta, Georgia";
 
 		// Create formatting class object
 		Formatting form = new Formatting();
@@ -580,8 +627,9 @@ public class AirlineReservation {
 		JPanel controls = new JPanel(new GridLayout(0, 1, 2, 2));
 		JComboBox<?> selectType = new JComboBox<Object>(fType);
 		controls.add(selectType);
-		JTextField inputDepart = new JTextField(30);
-		controls.add(inputDepart);
+		JTextField depart = new JTextField(departCity);
+		depart.setEditable(false);
+		controls.add(depart);
 		JTextField inputDest = new JTextField(30);
 		controls.add(inputDest);
 		JTextField inputTime = new JTextField(30);
@@ -610,7 +658,7 @@ public class AirlineReservation {
 			// Validate the user's selection and input
 			if (result == JOptionPane.OK_OPTION) {
 				String tableName = (String) selectType.getSelectedItem();
-				flight[0] = inputDepart.getText();
+				flight[0] = depart.getText();
 				flight[1] = inputDest.getText();
 				flight[2] = inputTime.getText();
 				flight[3] = inputPrice.getText();
@@ -650,7 +698,76 @@ public class AirlineReservation {
 	
 	
 	public void	updateFlight() throws SQLException, ParseException {
-		
+		DBConnection db = new DBConnection();
+		List<String> allFlights = db.getAllFlights();
+		String[] field = { "Select", "time", "pricePerTicket", "totalSeats", 
+				"availableSeats" };
+
+		// Create formatting class object
+		Formatting form = new Formatting();
+		        
+		// Create input fields and assign values
+		JPanel controls = new JPanel(new GridLayout(0, 1, 2, 2));
+		JComboBox<?> selectFlight = new JComboBox<Object>(allFlights.toArray());
+		controls.add(selectFlight);
+		JComboBox<?> selectField = new JComboBox<Object>(field);
+		controls.add(selectField);
+		JTextField inputField = new JTextField(30);
+		controls.add(inputField);
+
+		boolean cont = true;		
+		int result;
+		do {
+			JPanel panel = form.getUpdateFlightForm(controls);
+				
+			// Display the dialog box
+			Object[] choices = { "Update Flight", "Back To Menu" };
+			Object defaultChoice = choices[0];
+			result = JOptionPane.showOptionDialog(null, panel, "Update a Flight", 
+					JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE, 
+					null, choices, defaultChoice);
+				
+			String[] flight = new String[4];
+			// Validate the user's selection and input
+			if (result == JOptionPane.OK_OPTION) {
+				flight[0] = (String) selectFlight.getSelectedItem();
+				flight[1] = (String) selectField.getSelectedItem();
+				flight[2] = inputField.getText();
+				
+				String tableName = "";
+				String id = flight[0].substring(flight[0].length() - 4); // Get flight id
+
+				if (id.charAt(0) == '1') {
+					tableName = "domestic_flights";
+				}
+				if (id.charAt(0) == '2') {
+					tableName = "international_flights";
+				}
+
+				int count = 0;
+				for (int i = 0; i < flight.length; i++) {
+					if (flight[0].equals("Select") || (flight[2].isEmpty())) {
+						// All fields are required
+						count++;
+					}
+				}
+				if (count != 0) {
+					JOptionPane.showMessageDialog(null, "Please select a flight and "
+							+ "value to update.", "Error", JOptionPane.ERROR_MESSAGE);
+				}
+				else {
+					cont = false;
+					db.updateFlight(tableName, flight, id);
+				}
+			}
+			if (result == JOptionPane.CANCEL_OPTION || result == 1) {
+				// Go back to main menu
+				manageMainMenu();
+			}
+		    if (result == JOptionPane.CLOSED_OPTION) {
+		    	System.exit(0);  // Terminate the application
+		    }
+		} while (cont == true);
 		
 		// Continue the application
 		manageMainMenu();
@@ -659,11 +776,65 @@ public class AirlineReservation {
 	
 	public void	deleteFlight() throws SQLException, ParseException {
 		DBConnection db = new DBConnection();
-		String[] fType = { "domestic_flights", "international_flights" };
+		List<String> allFlights = db.getAllFlights();
 
 		// Create formatting class object
-		Formatting form = new Formatting();		        
-		
+		Formatting form = new Formatting();
+
+		// Create input fields and assign values
+		JPanel controls = new JPanel(new GridLayout(0, 1, 2, 2));
+		JComboBox<?> selectFlight = new JComboBox<Object>(allFlights.toArray());
+		controls.add(selectFlight);
+
+		boolean cont = true;		
+		int result;
+		do {
+			JPanel panel = form.getDeleteFlightForm(controls);
+				
+			// Display the dialog box
+			Object[] choices = { "Delete Flight", "Back To Menu" };
+			Object defaultChoice = choices[0];
+			result = JOptionPane.showOptionDialog(null, panel, "Delete a Flight", 
+					JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE, 
+					null, choices, defaultChoice);
+				
+			// Validate the user's selection and input
+			if (result == JOptionPane.OK_OPTION) {
+				String flight = (String) selectFlight.getSelectedItem();
+				
+				String tableName = "";
+				String id = flight.substring(flight.length() - 4); // Get flight id
+
+				if (id.charAt(0) == '1') {
+					tableName = "domestic_flights";
+				}
+				if (id.charAt(0) == '2') {
+					tableName = "international_flights";
+				}
+
+				int count = 0;
+				if (flight.equals("Select")) {
+					// Field is required
+					count++;
+				}
+				if (count != 0) {
+					JOptionPane.showMessageDialog(null, "Please select a flight "
+							+ "to delete.", "Error", 
+							JOptionPane.ERROR_MESSAGE);
+				}
+				else {
+					cont = false;
+					db.deleteFlight(tableName, id);
+				}
+			}
+			if (result == JOptionPane.CANCEL_OPTION || result == 1) {
+				// Go back to main menu
+				manageMainMenu();
+			}
+		    if (result == JOptionPane.CLOSED_OPTION) {
+		    	System.exit(0);  // Terminate the application
+		    }
+		} while (cont == true);		
 
 		// Continue the application
 		manageMainMenu();
@@ -679,6 +850,6 @@ public class AirlineReservation {
 		AirlineReservation app = new AirlineReservation();
 			
 		// Start the application
-		app.splashScreen();
+		app.optionScreen();
 	}
 }
