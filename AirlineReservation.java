@@ -1,20 +1,20 @@
 package edu.gsu.cis.GroupProject;
 
 import java.sql.SQLException;
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFormattedTextField;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
-import javax.swing.SwingConstants;
 import javax.swing.text.MaskFormatter;
-import java.awt.BorderLayout;
+
 import java.awt.Dimension;
 import java.awt.GridLayout;
 
@@ -23,16 +23,13 @@ public class AirlineReservation {
 	protected String password;
 	protected static String userType;
 		
-	// JDBC driver name and database URL
+	// JDBC driver name, database URL, and database credentials
 	protected static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";  
 	protected static final String DB_URL = "jdbc:mysql://localhost:3306/airline_system?useSSL=false";
-
-	// Database credentials
 	protected static final String USER = "root";
 	protected static final String PASS = "password123";
 		
 	public AirlineReservation() throws Exception {
-
 	}
 	
 	public void splashScreen() throws SQLException, ParseException {
@@ -56,11 +53,9 @@ public class AirlineReservation {
 
 	
 	/** 
-	 * Receive user login and determine authorized accounts
+	 * Process user login and determine the user type
 	 */
 	public void procUserLogin() {
-		// Authenticate the user first and find out which accounts the user
-		// is authorized to access
 		String loginInfo;			
 		boolean cont = true;
 		
@@ -102,29 +97,17 @@ public class AirlineReservation {
 	 */
 	private String getUserLogin() {
 		String loginInfo = "";
-		// Format the input dialog box
-		// Create JPanel object
-	    JPanel panel = new JPanel(new BorderLayout(3, 3));
-	        
-	    // Format the header and display the welcome message
-	    JPanel header = new JPanel(new GridLayout(1, 3));
-	    header.add(new JLabel("Enter Your Account", SwingConstants.CENTER));
-	    panel.add(header, BorderLayout.NORTH);
-	        
-	    // Format the labels
-	    JPanel label = new JPanel(new GridLayout(0, 1, 2, 2));
-	    label.add(new JLabel("Username: ", SwingConstants.RIGHT));
-	    label.add(new JLabel("Password: ", SwingConstants.RIGHT));
-	    panel.add(label, BorderLayout.WEST);
-	        
-	    // Format the fields and get the login id and password
+		
+		// Format the fields and get the login id and password
 	    JPanel controls = new JPanel(new GridLayout(0, 1, 2, 2));
 	    JTextField inputUsername = new JTextField(15);
 	    controls.add(inputUsername);        
 	    JTextField inputPassword = new JPasswordField(15);
 	    controls.add(inputPassword);
-	    panel.add(controls, BorderLayout.CENTER);
-	        
+	    
+	    Formatting form = new Formatting();
+	    JPanel panel = form.getLoginForm(controls);
+	    
 	    // Display the dialog box
 	    Object[] choices = { "Sign In" };
 		Object defaultChoice = choices[0];
@@ -136,72 +119,43 @@ public class AirlineReservation {
 	    if (result == JOptionPane.OK_OPTION) {
 	    	username = inputUsername.getText();
 	    	password = inputPassword.getText();
-
 	    	if (username.isEmpty() || password.isEmpty()) { 
 	    		// Return a value of null
 	    		loginInfo = null;
 	    	}
 	    	else {
-	    		// Return userID and password
 	    		loginInfo = username + " " + password;
 	    	}
 	    }
-
-	    // If user clicks close
 	    if (result == JOptionPane.CLOSED_OPTION) {
-	        // Terminate the application
-	        System.exit(0);
+	        System.exit(0);  // Terminate the application
 	    }
 	    return loginInfo;
 	}
 	
 	
-	/** 
+	/**
 	 * Format a JOptionPane dialog box to have multiple user info data fields, 
 	 * validate the input, and then send the input to the registerNewUser method 
 	 * to add it to the database 
 	 */
 	private void getUserRegistration() throws SQLException, ParseException {
 		String[] states = { "Select", "Alabama", "Alaska", "Arizona", "Arkansas", 
-				"California", "Colorado", "Connecticut", "Delaware", 
-				"Florida", "Georgia", "Hawaii", "Idaho", "Illinois", 
-				"Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana", 
-				"Maine", "Maryland", "Massachusetts", "Michigan", 
-				"Minnesota", "Mississippi", "Missouri", "Montana", 
-				"Nebraska", "Nevada", "New Hampshire", "New Jersey", 
-				"New Mexico", "New York", "North Carolina", "North Dakota", 
-				"Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", 
-				"South Carolina", "South Dakota", "Tennessee", "Texas", 
-				"Utah", "Vermont", "Virginia", "Washington", "West Virginia", 
-				"Wisconsin", "Wyoming" };
-				
-		// Format the input dialog box
-		// Create JPanel object
-	    JPanel panel = new JPanel(new BorderLayout(3, 3));
+				"California", "Colorado", "Connecticut", "Delaware", "Florida", 
+				"Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", 
+				"Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", 
+				"Massachusetts", "Michigan", "Minnesota", "Mississippi", 
+				"Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", 
+				"New Jersey", "New Mexico", "New York", "North Carolina", 
+				"North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania", 
+				"Rhode Island", "South Carolina", "South Dakota", "Tennessee", 
+				"Texas", "Utah", "Vermont", "Virginia", "Washington", "West "
+				+ "Virginia", "Wisconsin", "Wyoming" };
+
+		// Create formatting class object
+		Formatting form = new Formatting();
 	        
-	    // Format the header and display the welcome message
-	    JPanel header = new JPanel(new GridLayout(1, 3));
-	    header.add(new JLabel("Create An Account", SwingConstants.CENTER));
-	    panel.add(header, BorderLayout.NORTH);
-	            
-	    // Format the labels
-	    JPanel label = new JPanel(new GridLayout(0, 1, 2, 2));
-	    label.add(new JLabel("*First: ", SwingConstants.RIGHT));
-	    label.add(new JLabel("Middle: ", SwingConstants.RIGHT));
-	    label.add(new JLabel("*Last: ", SwingConstants.RIGHT));
-	    label.add(new JLabel("*Street: ", SwingConstants.RIGHT));
-	    label.add(new JLabel("*City: ", SwingConstants.RIGHT));
-	    label.add(new JLabel("*State: ", SwingConstants.RIGHT));
-	    label.add(new JLabel("*Zip: ", SwingConstants.RIGHT));
-	    label.add(new JLabel("*Username: ", SwingConstants.RIGHT));
-	    label.add(new JLabel("*Password: ", SwingConstants.RIGHT));
-	    label.add(new JLabel("*Email: ", SwingConstants.RIGHT));
-	    label.add(new JLabel("*SSN: ", SwingConstants.RIGHT));
-	    label.add(new JLabel("Security Question: ", SwingConstants.RIGHT));
-	    label.add(new JLabel("*Security Answer: ", SwingConstants.RIGHT));
-	    panel.add(label, BorderLayout.WEST);
-	        
-	    // Format the fields and get the login id and password
+	    // Format the fields
 	    JPanel controls = new JPanel(new GridLayout(0, 1, 2, 2));
 	    JTextField inputFirst = new JTextField(30);
 	    controls.add(inputFirst);
@@ -226,19 +180,21 @@ public class AirlineReservation {
 	    MaskFormatter mf = new MaskFormatter("###-##-####");
 	    JFormattedTextField inputSSN = new JFormattedTextField(mf);
 	    controls.add(inputSSN);	    
-	    JTextField showSQ = new JTextField("What was the name of your first pet?");
+	    JTextField showSQ = new JTextField("What was the name "
+	    		+ "of your first pet?");
 	    showSQ.setEditable(false);
 	    controls.add(showSQ);
 	    JTextField inputANS = new JTextField();
-	    controls.add(inputANS); 
-	    panel.add(controls, BorderLayout.CENTER);
+	    controls.add(inputANS);
 	    
 	    // Display registration form
 	    boolean cont = true;
 	    int result;
 		do {
+			JPanel panel = form.getRegistrationForm(controls);
+			
 			// Display the dialog box
-		    Object[] choices = { "Register" };
+		    Object[] choices = { "Register", "Back To Menu" };
 			Object defaultChoice = choices[0];
 			result = JOptionPane.showOptionDialog(null, panel, "User Registration", 
 					JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE, 
@@ -291,10 +247,12 @@ public class AirlineReservation {
 					}
 				}
 			}
-			// If user clicks close
+			if (result == JOptionPane.CANCEL_OPTION || result == 1) {
+				// Go back to main menu
+				manageMainMenu();
+			}
 	    	if (result == JOptionPane.CLOSED_OPTION) {
-	    		// Terminate the application
-	    		System.exit(0);
+	    		System.exit(0);  // Terminate the application
 	    	}
 		} while (cont == true);
  	}
@@ -413,11 +371,27 @@ public class AirlineReservation {
 	/**
 	 * Process domestic flight booking request
 	 */
-	public void bookDomesticFlight() throws SQLException, ParseException {
+	public void bookDomesticFlight() throws Exception  {
+		procFlightBooking("domestic_flights");
+	}
+	
+	
+	/**
+	 * Process international flight booking request
+	 */
+	public void	bookInternationalFlight() throws Exception {	
+		procFlightBooking("international_flights");
+	}
+	
+	
+	/**
+	 * Format input form and process flight booking request
+	 */
+	public void procFlightBooking(String tableName) throws Exception {
 		DBConnection db = new DBConnection();
-	    String departCity = db.getStartColumn("domestic_flights", "start");
+	    String departCity = db.getStartColumn(tableName, "start");
 		String[] destCity = new String[19];
-		destCity = db.getDestColumn("domestic_flights", "dest");
+		destCity = db.getDestColumn(tableName, "dest");
 
 		List<Integer> adults = new ArrayList<Integer>(6);
 		List<Integer> children = new ArrayList<Integer>(6);
@@ -431,7 +405,7 @@ public class AirlineReservation {
 		}
 		
 		// Create formatting class object
-		Formatting f1 = new Formatting();
+		Formatting form = new Formatting();
 		
 		// Create input fields and assign values
 		JPanel controls = new JPanel(new GridLayout(0, 1, 2, 2));
@@ -439,13 +413,13 @@ public class AirlineReservation {
 		depart.setEditable(false);
 		controls.add(depart);
 		JComboBox<?> selectDest = new JComboBox<Object>(destCity);
-		controls.add(selectDest);		
+		controls.add(selectDest);
 		JTextField selectDate = new JTextField(12);
 		JButton b = new JButton("...");
 		selectDate.setColumns(5);
 		b.setPreferredSize(new Dimension(40, 10));
 		controls.add(selectDate);
-		f1.setupDateSelectButton(controls, b, selectDate);      	
+		form.setupDateSelectButton(controls, b, selectDate);      	
 		JComboBox<?> selectAdults = new JComboBox<Object>(adults.toArray());
 		controls.add(selectAdults);
 		JComboBox<?> selectChildren = new JComboBox<Object>(children.toArray());
@@ -457,8 +431,7 @@ public class AirlineReservation {
 		boolean cont = true;
 		int result;
 		do {
-			JPanel panel = f1.getBookingForm(controls, b, departCity, destCity, 
-					adults, children, infants);
+			JPanel panel = form.getBookingForm(controls, b);
 			
 			// Display the dialog box
 			Object[] choices = { "Search Flights", "Back To Menu" };
@@ -477,9 +450,6 @@ public class AirlineReservation {
 				passengerInfo[0] = (int) selectAdults.getSelectedItem();
 				passengerInfo[1] = (int) selectChildren.getSelectedItem();
 				passengerInfo[2] = (int) selectInfants.getSelectedItem();
-				JOptionPane.showMessageDialog(null, bookingInfo[0]);
-				JOptionPane.showMessageDialog(null, bookingInfo[1]);
-				JOptionPane.showMessageDialog(null, bookingInfo[2]);
 				
 				int count = 0;
 				for (int i = 0; i < 3; i++) {
@@ -490,13 +460,13 @@ public class AirlineReservation {
 					}
 				}					
 				if (count != 0) {
-					JOptionPane.showMessageDialog(null,
+					JOptionPane.showMessageDialog(null, 
 							"Please fill in all of the data fields.",
 							"Error", JOptionPane.ERROR_MESSAGE);
 				}
 				else {
 					String[] flight = new String[7];
-					flight = db.getFlightInfo("domestic_flights", bookingInfo);
+					flight = db.getFlightInfo(tableName, bookingInfo);
 					int conflictCode = db.checkForConflicts(flight, bookingInfo, username);
 
 					if (conflictCode == 1) {
@@ -515,6 +485,7 @@ public class AirlineReservation {
 					else {
 						// Returns 0: No conflict
 						int price = Integer.parseInt(flight[4]);
+						DecimalFormat df = new DecimalFormat("#.00");
 						int available = Integer.parseInt(flight[6]);		    
 						int seatsWanted = passengerInfo[0] + passengerInfo[1];  // Infants sit in laps
 						int totalCost = 0;
@@ -522,24 +493,31 @@ public class AirlineReservation {
 						String month = bookingInfo[2].substring(6, 7);
 						String day = bookingInfo[2].substring(8, 10);
 						String date = month + "-" + day  + "-" + year;
-					    
+						
 						if (available == 0) {
 							JOptionPane.showMessageDialog(null, 
 									"This flight is full", "Error", 
 									JOptionPane.ERROR_MESSAGE);
-						}					    
+						}
 						if ((available - seatsWanted) >= 0) {
-							String message = "There are " + seatsWanted + " seats "
-									+ "available on " + date + " at " 
-									+ flight[3] + " for $" + price + " per ticket. "
+							String verb;
+							if (seatsWanted == 1) {
+								verb = "is";
+							}
+							else {
+								verb = "are";
+							}
+							String message = "There " + verb + " " + seatsWanted + 
+									" seats available on " + date + " at " + flight[3] 
+									+ " \nfor $" + df.format(price) + " per ticket. "
 									+ "Do you want to book now?";
 							int option = JOptionPane.showConfirmDialog(null, message);
 							if (option == 0) {
 								totalCost = seatsWanted * price;
-								boolean success = db.bookNewFlight(flight, bookingInfo[2], 
-										totalCost, passengerInfo[0], passengerInfo[1], 
-										passengerInfo[2], username, available, seatsWanted, 
-										"domestic_flights");
+								boolean success = db.bookNewFlight(tableName, flight, 
+										bookingInfo[2], totalCost, passengerInfo[0], 
+										passengerInfo[1], passengerInfo[2], username, 
+										available, seatsWanted);
 								if (success == true) {
 									manageMainMenu();
 								}
@@ -565,23 +543,7 @@ public class AirlineReservation {
 		    	System.exit(0);
 		    }
 		} while (cont == true);
-
-		// Continue the application
-		manageMainMenu();
-	}
 		
-		
-	/**
-	 * Process international flight booking request
-	 */
-	public void	bookInternationalFlight() {	
-		try {
-
-
-		} catch (Exception ex) {
-			throw ex;
-		}
-			
 		// Continue the application
 		manageMainMenu();
 	}
@@ -608,40 +570,101 @@ public class AirlineReservation {
 	 *  FOR ADMIN USERS ONLY
 	 * ======================
 	 */
-	public void	addFlight() {
-		try {
-			
+	public void	addFlight() throws SQLException, ParseException {
+		String[] fType = { "Select", "domestic_flights", "international_flights" };
 
-		} catch (Exception ex) {
-			throw ex;
-		}
+		// Create formatting class object
+		Formatting form = new Formatting();
+		        
+		// Create input fields and assign values
+		JPanel controls = new JPanel(new GridLayout(0, 1, 2, 2));
+		JComboBox<?> selectType = new JComboBox<Object>(fType);
+		controls.add(selectType);
+		JTextField inputDepart = new JTextField(30);
+		controls.add(inputDepart);
+		JTextField inputDest = new JTextField(30);
+		controls.add(inputDest);
+		JTextField inputTime = new JTextField(30);
+		controls.add(inputTime);
+		JTextField inputPrice = new JTextField(30);
+		controls.add(inputPrice);
+		JTextField inputTSeats = new JTextField(30);
+		controls.add(inputTSeats);
+		JTextField inputASeats = new JTextField(20);
+		controls.add(inputASeats);
+		    
+		// Display input form
+		boolean cont = true;
+		int result;
+		do {
+			JPanel panel = form.getNewFlightForm(controls);
+				
+			// Display the dialog box
+			Object[] choices = { "Add Flight", "Back To Menu" };
+			Object defaultChoice = choices[0];
+			result = JOptionPane.showOptionDialog(null, panel, "Add a Flight", 
+					JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE, 
+					null, choices, defaultChoice);
+				
+			String[] flight = new String[6];
+			// Validate the user's selection and input
+			if (result == JOptionPane.OK_OPTION) {
+				String tableName = (String) selectType.getSelectedItem();
+				flight[0] = inputDepart.getText();
+				flight[1] = inputDest.getText();
+				flight[2] = inputTime.getText();
+				flight[3] = inputPrice.getText();
+				flight[4] = inputTSeats.getText();
+				flight[5] = inputASeats.getText();
+
+				int count = 0;
+				for (int i = 0; i < flight.length; i++) {
+					if (tableName.equals("Select") || flight[i].isEmpty()) {
+						// All fields are required
+						count++;
+					}
+				}
+				if (count != 0) {
+					JOptionPane.showMessageDialog(null,
+							"Please fill in all of the data fields.",
+							"Error", JOptionPane.ERROR_MESSAGE);
+				}
+				else {
+					cont = false;
+					DBConnection db = new DBConnection();
+					db.addNewFlight(tableName, flight);
+				}
+			}
+			if (result == JOptionPane.CANCEL_OPTION || result == 1) {
+				// Go back to main menu
+				manageMainMenu();
+			}
+		    if (result == JOptionPane.CLOSED_OPTION) {
+		    	System.exit(0);  // Terminate the application
+		    }
+		} while (cont == true);
+
+	// Continue the application
+	manageMainMenu();
+	}
+	
+	
+	public void	updateFlight() throws SQLException, ParseException {
+		
 		
 		// Continue the application
 		manageMainMenu();
 	}
 	
 	
-	public void	updateFlight() {
-		try {
-			
+	public void	deleteFlight() throws SQLException, ParseException {
+		DBConnection db = new DBConnection();
+		String[] fType = { "domestic_flights", "international_flights" };
 
-		} catch (Exception ex) {
-			throw ex;
-		}
+		// Create formatting class object
+		Formatting form = new Formatting();		        
 		
-		// Continue the application
-		manageMainMenu();
-	}
-	
-	
-	public void	deleteFlight() {
-		try {
-			
 
-		} catch (Exception ex) {
-			throw ex;
-		}
-		
 		// Continue the application
 		manageMainMenu();
 	}
